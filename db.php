@@ -43,6 +43,23 @@ if (!function_exists('getCategories')) {
         return $categories;
     }
 }
+if (!function_exists('searchProducts')) {
+    function searchProducts($key)
+    {
+        global $connection;
+        $query = $connection->prepare("SELECT * FROM products WHERE name LIKE '%" . $key . "%' OR description LIKE '%" . $key . "%'");
+        $query->execute();
+        $result = $query->fetchAll();
+        if ($result == null)
+            return null;
+
+        $products = [];
+        foreach ($result as $item) {
+            $products[] = new Product($item['id'], $item['name'], $item['selling_price'], $item['description'], $item['date'], $item['count'], $item['marked_price'], $item['category_id']);
+        }
+        return $products;
+    }
+}
     if (!function_exists('getAllItems')) {
         function getAllItems()
         {
@@ -72,6 +89,19 @@ if (!function_exists('getProduct')) {
         if ($result == null)
             return null;
         return new Product($result['id'], $result['name'], $result['selling_price'], $result['description'], $result['date'], $result['count'], $result['marked_price'], $result['category_id']);
+    }
+}
+
+if (!function_exists('getCategory')) {
+    function getCategory($id)
+    {
+        global $connection;
+        $query = $connection->prepare("SELECT * FROM category WHERE id = $id");
+        $query->execute();
+        $result = $query->fetch(PDO::FETCH_ASSOC);
+        if ($result == null)
+            return null;
+        return new Category($result['id'], $result['name']);
     }
 }
 if (!function_exists('getAuthUser')) {

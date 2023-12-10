@@ -64,7 +64,7 @@
                 </div>
             </li>
         </ul>
-        <form class="form-inline my-2 my-lg-0" action="{% url 'search' %}" method="GET">
+        <form class="form-inline my-2 my-lg-0" action="search.php" method="GET">
             <input name="keyword" class="form-control mr-sm-2" type="search" placeholder="поиск" aria-label="Search"
                    required>
             <button class="btn btn-info my-2 my-sm-0" type="submit">Поиск</button>

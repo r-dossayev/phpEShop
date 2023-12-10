@@ -37,4 +37,9 @@ class Product
         $this->marked_price = $marked_price;
         $this->category_id = $category_id;
     }
+
+    public function getCategory()
+    {
+        return getCategory($this->category_id);
+    }
 }
