@@ -16,13 +16,18 @@
                 </div>
                 <?php
             }
-            if(isset($_GET['error_password'])){
+            if (isset($_SESSION['errors'])) {
+
                 ?>
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    Password isnt confirmed! Try again!
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
+                    <?php
+                    foreach ($_SESSION['errors'] as $error) {
+                        echo $error . "<br>";
+                    }
+                    ?>
+               </div>
                 <?php
+                $_SESSION['errors'] = null;
             }
             ?>
             <div class="col-6 mx-auto">

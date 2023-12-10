@@ -305,7 +305,21 @@ if (!function_exists('getAuthUser')) {
     }
 }
 
+if (!function_exists('checkByUsername')) {
+    function checkByUsername($username)
+    {
+        global $connection;
+        $query = $connection->prepare("SELECT * FROM users WHERE username = '$username'");
+        $query->execute();
+        $result = $query->fetch(PDO::FETCH_ASSOC);
+      $res = false;
+        if ($result != null) {
+            $res = true;
+        }
+        return $res;
 
+    }
+}
 if (!function_exists('checkUser')) {
     function checkUser($username, $password)
     {
