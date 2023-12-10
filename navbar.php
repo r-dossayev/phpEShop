@@ -30,7 +30,6 @@
             <li class="nav-item">
                 <a class="nav-link" href="about.php">Про нас</a>
             </li>
-
             <li class="nav-item">
                 <?php
                 require_once 'db.php';
@@ -73,6 +72,44 @@
             <?php } ?>
 
         </ul>
+        <button style="margin-right: 20px" type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+            filter
+        </button>
+
+        <!-- Modal -->
+        <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Filter</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form method="get" action="index.php">
+                            цена от: <input class="form-control mr-sm-2" type="number" name="price_from">
+                            до: <input class="form-control mr-sm-2" type="number" name="price_to">
+                            сначала <select class="form-control mr-sm-2" name="sort_type">
+                                <option value="price_asc">по возрастанию цены</option>
+                                <option value="price_desc">по убыванию цены</option>
+                                <option value="name_asc">по имени А-Я</option>
+                                <option value="name_desc">по имени Я-А</option>
+                            </select>
+                            <div class="mt-3">
+                                <button type="submit" class="btn btn-primary">Применить</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыт</button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <form class="form-inline my-2 my-lg-0" action="search.php" method="GET">
             <input name="keyword" class="form-control mr-sm-2" type="search" placeholder="поиск" aria-label="Search"
                    required>

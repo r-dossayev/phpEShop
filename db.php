@@ -320,6 +320,22 @@ if (!function_exists('checkByUsername')) {
 
     }
 }
+if (!function_exists('filterProducts')) {
+    function filterProducts($price_from, $price_to, $sort_type='ASC', $sort_column='selling_price')
+    {
+        global $connection;
+        $query = $connection->prepare("SELECT * FROM products WHERE selling_price BETWEEN $price_from AND $price_to ORDER BY $sort_column $sort_type");
+        $query->execute();
+        $result = $query->fetchAll(PDO::FETCH_ASSOC);
+        if ($result == null)
+            return null;
+        $products = [];
+        foreach ($result as $item) {
+            $products[] = new Product($item['id'], $item['name'], $item['selling_price'], $item['description'], $item['date'], $item['count'], $item['marked_price'], $item['category_id'], $item['image']);
+        }
+        return $products;
+    }
+}
 if (!function_exists('checkUser')) {
     function checkUser($username, $password)
     {
