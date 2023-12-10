@@ -11,6 +11,15 @@ $user = getAuthUser();
 if ($user == null) {
     header('location:login.php?error');
 }
+if (isset($_POST['money'])) {
+    $money = $_POST['money'];
+    $res = updateBalance($money);
+    if ($res) {
+        header('location:profile.php?success');
+    } else {
+        header('location:profile.php?error');
+    }
+}
 ?>
 <div class="container">
     <div class="row">
@@ -33,21 +42,25 @@ if ($user == null) {
                     <th>Товар</th>
                     <th>Количество</th>
                     <th>Стоимость</th>
-                    <th>Время</th>
+<!--                    <th>Время</th>-->
                     <th>Статус</th>
                 </tr>
                 </thead>
                 <tbody>
-                {% for cart_item in cart_items %}
-                <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td><a href="{{ cart_item.product.get_absolute_url }}">{{ cart_item.product.title }}</a></td>
-                    <td>{{ cart_item.count }}</td>
-                    <td>{{ cart_item.product.selling_price }} тг</td>
-                    <td>{{ cart_item.created_at|timesince }} назад</td>
-                    <td>куплено</td>
-                </tr>
-                {% endfor %}
+                <?php
+                require_once 'db.php';
+                $total_summa = 0;
+                $products = getBuyingUserCartItems();
+                if ($products != null && count($products) > 0)
+                    foreach ($products as $item) {?>
+                        <tr>
+                            <td><?php echo $item->id ?></td>
+                            <td><a href="show.php?item=<?= $item->getProduct()->id ?>"><?php echo $item->getProduct()->name ?></a></td>
+                            <td><?php echo $item->count ?></td>
+                            <td><?php echo $item->getProduct()->selling_price?> тг</td>
+                            <td>куплено</td>
+                        </tr>
+                        <?php } ?>
                 </tbody>
             </table>
         </div>
@@ -68,8 +81,8 @@ if ($user == null) {
                         </button>
                     </div>
                     <div class="modal-body">
-                        <form action="{% url 'updateMoney' %}" method="post">
-                            {% csrf_token %}
+                        <form method="post">
+
                             <label> тенге
                                 <input type="number" name="money" placeholder="1000 тг" class="form-control">
                             </label>

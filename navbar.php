@@ -1,5 +1,5 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-danger">
-    <a class="navbar-brand" href="/">Apple</a>
+    <a class="navbar-brand" href="index.php">Apple</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -8,7 +8,7 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
-                <a class="nav-link" href="/">Главная <span class="sr-only">(current)</span></a>
+                <a class="nav-link" href="index.php">Главная <span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown1" role="button" data-toggle="dropdown"
@@ -36,7 +36,7 @@
                 require_once 'db.php';
                 if (getAuthUser() != null && getAuthUser()->role !== 'ADMIN') {
                     ?>
-                    <a class="nav-link" href="#">Корзина</a>
+                    <a class="nav-link" href="mycart.php">Корзина</a>
                 <?php } ?>
             </li>
             <li class="nav-item dropdown">
@@ -51,18 +51,27 @@
                         ?>
                         <a class="dropdown-item" href="profile.php">Профиль</a>
                         <a class="dropdown-item" href="logout.php">Выйти</a>
-                        <?php
-                        if (getAuthUser()->role === 'ADMIN') {
-                            ?>
-                            <a class="dropdown-item" href="additem.php">Добавить товар</a>
-                            <?php
-                        }
+                    <?php
                     } else {?>
                         <a class="dropdown-item" href="login.php">Логин</a>
                         <a class="dropdown-item" href="registration.php">Регистрация</a>
                     <?php } ?>
                 </div>
             </li>
+            <?php if (getAuthUser() != null && getAuthUser()->role === 'ADMIN') { ?>
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
+                       aria-haspopup="true" aria-expanded="false">
+                        ADMIN
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="admin_add_product.php">Add product</a>
+                            <a class="dropdown-item" href="users.php">Users</a>
+                    </div>
+                </li>
+            <?php } ?>
+
         </ul>
         <form class="form-inline my-2 my-lg-0" action="search.php" method="GET">
             <input name="keyword" class="form-control mr-sm-2" type="search" placeholder="поиск" aria-label="Search"

@@ -7,6 +7,75 @@ try {
 } catch (Exception $e) {
     echo "<h4 style='color:red';>" . $e->getMessage() . "</h4>";
 }
+if (!function_exists('getUserCartItems')) {
+    function getUserCartItems()
+    {
+        $user_id = getAuthUser()->id;
+        if ($user_id == null)
+            return null;
+        global $connection;
+        $query = $connection->prepare("SELECT * FROM cart WHERE user_id = $user_id AND status = 'PENDING'");
+        $query->execute();
+        $result = $query->fetchAll();
+        if ($result == null)
+            return null;
+
+        $cartItems = [];
+        foreach ($result as $item) {
+            $cartItems[] = new Cart($item['id'], $item['user_id'], $item['product_id'], $item['count']);
+        }
+        return $cartItems;
+    }
+}
+
+if (!function_exists('getUsers')) {
+    function getUsers()
+    {
+        global $connection;
+        $auth_user = getAuthUser();
+        $query = $connection->prepare("SELECT * FROM users WHERE id != $auth_user->id");
+        $query->execute();
+        $result = $query->fetchAll();
+        if ($result == null)
+            return null;
+
+        $users = [];
+        foreach ($result as $item) {
+            $users[] = new User($item['id'], $item['username'], $item['name'], $item['password'], $item['last_name'], $item['role'], $item['balance'], $item['last_login']);
+        }
+        return $users;
+    }
+}
+if (!function_exists('getBuyingUserCartItems')) {
+    function getBuyingUserCartItems()
+    {
+        $user_id = getAuthUser()->id;
+        if ($user_id == null)
+            return null;
+        global $connection;
+        $query = $connection->prepare("SELECT * FROM cart WHERE user_id = $user_id AND status = 'BOUGHT'");
+        $query->execute();
+        $result = $query->fetchAll();
+        if ($result == null)
+            return null;
+
+        $cartItems = [];
+        foreach ($result as $item) {
+            $cartItems[] = new Cart($item['id'], $item['user_id'], $item['product_id'], $item['count']);
+        }
+        return $cartItems;
+    }
+}
+if (!function_exists('addToCart')) {
+    function addToCart($product_id, $count = 1)
+    {
+        $user_id = getAuthUser()->id;
+        global $connection;
+        $query = $connection->prepare("INSERT INTO cart (user_id, product_id, count) VALUES (?,?,?)");
+        $query->execute([$user_id, $product_id, $count]);
+        return true;
+    }
+}
 if (!function_exists('getCategoryItems')) {
     function getCategoryItems($id)
     {
@@ -19,12 +88,25 @@ if (!function_exists('getCategoryItems')) {
 
         $products = [];
         foreach ($result as $item) {
-            $products[] = new Product($item['id'], $item['name'], $item['selling_price'], $item['description'], $item['date'], $item['count'], $item['marked_price'], $item['category_id']);
+            $products[] = new Product($item['id'], $item['name'], $item['selling_price'], $item['description'], $item['date'], $item['count'], $item['marked_price'], $item['category_id'], $item['image']);
         }
         return $products;
     }
 }
+if (!function_exists('addProduct')) {
+    function addProduct($name, $selling_price, $description, $count, $marked_price, $category_id, $image)
+    {
+        global $connection;
+        try {
+            $query = $connection->prepare("INSERT INTO products (name, selling_price, description,count, marked_price, category_id, image) VALUES (?,?,?,?,?,?,?)");
+            $query->execute([$name, $selling_price, $description, $count, $marked_price, $category_id, $image]);
+            return true;
+        } catch (Exception $e) {
+            return false;
+        }
 
+    }
+}
 if (!function_exists('getCategories')) {
     function getCategories()
     {
@@ -55,28 +137,28 @@ if (!function_exists('searchProducts')) {
 
         $products = [];
         foreach ($result as $item) {
-            $products[] = new Product($item['id'], $item['name'], $item['selling_price'], $item['description'], $item['date'], $item['count'], $item['marked_price'], $item['category_id']);
+            $products[] = new Product($item['id'], $item['name'], $item['selling_price'], $item['description'], $item['date'], $item['count'], $item['marked_price'], $item['category_id'], $item['image']);
         }
         return $products;
     }
 }
-    if (!function_exists('getAllItems')) {
-        function getAllItems()
-        {
-            global $connection;
-            $query = $connection->prepare("SELECT * FROM products");
-            $query->execute();
-            $result = $query->fetchAll();
-            if ($result == null)
-                return null;
+if (!function_exists('getAllItems')) {
+    function getAllItems()
+    {
+        global $connection;
+        $query = $connection->prepare("SELECT * FROM products");
+        $query->execute();
+        $result = $query->fetchAll();
+        if ($result == null)
+            return null;
 
-            $products = [];
-            foreach ($result as $item) {
-                $products[] = new Product($item['id'], $item['name'], $item['selling_price'], $item['description'], $item['date'], $item['count'], $item['marked_price'], $item['category_id']);
-            }
-            return $products;
+        $products = [];
+        foreach ($result as $item) {
+            $products[] = new Product($item['id'], $item['name'], $item['selling_price'], $item['description'], $item['date'], $item['count'], $item['marked_price'], $item['category_id'], $item['image']);
         }
+        return $products;
     }
+}
 
 
 if (!function_exists('getProduct')) {
@@ -88,7 +170,106 @@ if (!function_exists('getProduct')) {
         $result = $query->fetch(PDO::FETCH_ASSOC);
         if ($result == null)
             return null;
-        return new Product($result['id'], $result['name'], $result['selling_price'], $result['description'], $result['date'], $result['count'], $result['marked_price'], $result['category_id']);
+        return new Product($result['id'], $result['name'], $result['selling_price'], $result['description'], $result['date'], $result['count'], $result['marked_price'], $result['category_id'], $result['image']);
+    }
+}
+if (!function_exists('deleteProduct')) {
+    function deleteProduct($id)
+    {
+        global $connection;
+        $query = $connection->prepare("DELETE FROM products WHERE id = '$id'");
+        $query->execute();
+        $result = $query->fetch(PDO::FETCH_ASSOC);
+        return true;
+    }
+}
+
+if (!function_exists('updateProduct')) {
+    //$goodsId, $updatedName, $sellPrice, $markPrice, $category, $description, $targetFile)
+    function updateProduct($product_id, $name, $selling_price, $marked_price, $category_id, $description, $image = null)
+    {
+        global $connection;
+        if ($image == null) {
+            $query = $connection->prepare("UPDATE products SET name = ?, selling_price = ?, marked_price = ?, category_id = ?, description = ? WHERE id = ?");
+            $query->execute([$name, $selling_price, $marked_price, $category_id, $description, $product_id]);
+
+        } else {
+            $query = $connection->prepare("UPDATE products SET name = ?, selling_price = ?, marked_price = ?, category_id = ?, description = ?, image = ? WHERE id = ?");
+            $query->execute([$name, $selling_price, $marked_price, $category_id, $description, $image, $product_id]);
+        }
+        return true;
+    }
+}
+
+if (!function_exists('incCart')) {
+    function incCart($product_id)
+    {
+        global $connection;
+        $query = $connection->prepare("UPDATE cart SET count = count + 1 WHERE product_id = $product_id AND user_id = " . getAuthUser()->id);
+        $query->execute();
+        return true;
+    }
+}
+if (!function_exists('buyAllProducts')) {
+    function buyAllProducts()
+    {
+        global $connection;
+        $query = $connection->prepare("UPDATE cart SET status = 'BOUGHT' WHERE user_id = " . getAuthUser()->id);
+        $query->execute();
+        return true;
+    }
+}
+if (!function_exists('dcrCart')) {
+    function dcrCart($product_id)
+    {
+        global $connection;
+        if (getCartCount($product_id) == 1)
+            return rmvCart($product_id);
+        $query = $connection->prepare("UPDATE cart SET count = count - 1 WHERE product_id = $product_id AND user_id = " . getAuthUser()->id);
+        $query->execute();
+        return true;
+    }
+
+}
+if (!function_exists('updateBalance')) {
+    function updateBalance($balance)
+    {
+        global $connection;
+        $query = $connection->prepare("UPDATE users SET balance = $balance WHERE id = " . getAuthUser()->id);
+        $query->execute();
+        return true;
+    }
+}
+if (!function_exists('updateRole')) {
+    function updateRole($id, $role)
+    {
+        global $connection;
+        $query = $connection->prepare("UPDATE users SET role = '$role' WHERE id = '$id'");
+        $query->execute();
+        return true;
+
+    }
+}
+
+if (!function_exists('getCartCount')) {
+    function getCartCount($product_id)
+    {
+        global $connection;
+        $query = $connection->prepare("SELECT * FROM cart WHERE product_id = $product_id AND user_id = " . getAuthUser()->id);
+        $query->execute();
+        $result = $query->fetch(PDO::FETCH_ASSOC);
+        if ($result == null)
+            return 0;
+        return $result['count'];
+    }
+}
+if (!function_exists('rmvCart')) {
+    function rmvCart($product_id)
+    {
+        global $connection;
+        $query = $connection->prepare("DELETE FROM cart WHERE product_id = $product_id AND user_id = " . getAuthUser()->id);
+        $query->execute();
+        return true;
     }
 }
 
@@ -124,98 +305,7 @@ if (!function_exists('getAuthUser')) {
     }
 }
 
-class User
-{
-    public $id;
-    public $username;
-    public $name;
-    public $password;
-    public $last_name;
-    public $role;
-    public $balance;
-    public $last_login;
 
-
-    public function __construct($id, $username, $name, $password, $last_name, $role, $balance, $last_login)
-    {
-        $this->id = $id;
-        $this->username = $username;
-        $this->password = $password;
-        $this->last_name = $last_name;
-        $this->role = $role;
-        $this->balance = $balance;
-        $this->last_login = $last_login;
-    }
-}
-
-if (!function_exists('getUserFromSession')) {
-
-    function getUserFromSession()
-    {
-        // Проверяем, существует ли ключ 'user_id' в сессии
-        if (isset($_SESSION['user_id'])) {
-            // Если существует, то получаем данные пользователя из БД
-            $userId = $_SESSION['user_id'];
-
-            global $conn;
-
-            $sql = "SELECT * FROM users WHERE id = $userId";
-            $result = $conn->query($sql);
-
-            if ($result->num_rows > 0) {
-                $user = $result->fetch_assoc();
-                return $user;
-            }
-        }
-
-        return null;
-    }
-}
-
-
-if (!function_exists('getCategories')) {
-    function createGoods($name, $price, $image, $user)
-    {
-        global $conn;
-
-        $sql = "INSERT INTO goods (name, price, image, user_id) VALUES ('$name', $price, '$image', '$user')";
-
-        if ($conn->query($sql) === TRUE) {
-            return true;
-        } else {
-            // Выводим сообщение об ошибке
-            echo "Error: " . $sql . "<br>" . $conn->error;
-            return false;
-        }
-    }
-}
-// Проверяем, определена ли функция searchGoods
-if (!function_exists('searchGoods')) {
-    // Определение функции searchGoods
-    function searchGoods($query, $category = null)
-    {
-        global $conn;
-        $goods = array();
-
-        // Подготовка условия для поиска
-        $whereCondition = "WHERE name LIKE '%$query%'";
-        if ($category) {
-            $whereCondition .= " AND category_id = $category";
-        }
-
-        // SQL-запрос
-        $sql = "SELECT * FROM goods $whereCondition";
-        $result = $conn->query($sql);
-
-        if ($result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-                $goods[] = $row;
-            }
-        }
-
-        return $goods;
-    }
-}
 if (!function_exists('checkUser')) {
     function checkUser($username, $password)
     {
@@ -251,45 +341,6 @@ if (!function_exists('addUser')) {
     }
 }
 
-if (!function_exists('readGoods')) {
-    function readGoods($category = null)
-    {
-        global $conn;
-        $goods = array();
-
-        $whereCondition = $category ? "WHERE category_id = $category" : "";
-        $sql = "SELECT * FROM goods $whereCondition";
-        $result = $conn->query($sql);
-
-        if ($result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-                $goods[] = $row;
-            }
-        }
-
-        return $goods;
-    }
-}
-
-
-if (!function_exists('getGoodCategory')) {
-    function getGoodCategory($id)
-    {
-        global $conn;
-
-        $sql = "SELECT * FROM categories WHERE id = $id";
-        $result = $conn->query($sql);
-
-        if ($result->num_rows > 0) {
-            $category = $result->fetch_assoc();
-            return $category;
-        }
-
-        return null;
-    }
-}
-
-
 if (!function_exists('banUser')) {
     function banUser($id)
     {
@@ -322,21 +373,6 @@ if (!function_exists("unbanUser")) {
     }
 }
 
-if (!function_exists('updateRole')) {
-    function updateRole($id, $role)
-    {
-        global $conn;
-
-        $sql = "UPDATE users SET role = '$role' WHERE id = $id";
-
-        if ($conn->query($sql) === TRUE) {
-            return true;
-        } else {
-            echo "Error: " . $sql . "<br>" . $conn->error;
-            return false;
-        }
-    }
-}
 
 if (!function_exists('deleteCategory')) {
     function deleteCategory($id)
@@ -371,35 +407,4 @@ if (!function_exists('addCategory')) {
 }
 
 
-if (!function_exists('updateGood')) {
-    function updateGood($id, $name, $price, $category)
-    {
-        global $conn;
-
-        $sql = "UPDATE goods SET name = '$name', price = $price, category_id = $category WHERE id = $id";
-
-        if ($conn->query($sql) === TRUE) {
-            return true;
-        } else {
-            echo "Error: " . $sql . "<br>" . $conn->error;
-            return false;
-        }
-    }
-}
-
-if (!function_exists('deleteGood')) {
-    function deleteGood($id)
-    {
-        global $conn;
-
-        $sql = "DELETE FROM goods WHERE id = $id";
-
-        if ($conn->query($sql) === TRUE) {
-            return true;
-        } else {
-            echo "Error: " . $sql . "<br>" . $conn->error;
-            return false;
-        }
-    }
-}
 
