@@ -9,37 +9,41 @@ if (getAuthUser() == null) {
 if (isset($_GET['action'])) {
     if ($_GET['action'] === 'inc' && isset($_GET['product_id'])) {
         $res = incCart($_GET['product_id']);
-        if ($res) header('Location:mycart.php');
-        else header('Location:index.php?error');
+        if (!$res)  header('Location:index.php?error');
     } else if ($_GET['action'] === 'dcr') {
         $res = dcrCart($_GET['product_id']);
-        if ($res) header('Location:mycart.php');
-        else header('Location:index.php?error');
+        if (!$res)  header('Location:index.php?error');
     } else if ($_GET['action'] === 'rmv') {
         $res = rmvCart($_GET['product_id']);
-        if ($res) header('Location:mycart.php');
-        else header('Location:index.php?error');
+        if (!$res)  header('Location:index.php?error');
     }
 }
 if (isset($_POST['total_summa'])) {
     $total_summa = $_POST['total_summa'];
     $user_balance = getAuthUser()->balance;
     if ($total_summa > $user_balance) {
-        header('Location:mycart.php?error=balance');
+        $_SESSION['errors'] = ['У вас недостаточно средств для покупки'];
     } else {
-        buyAllProducts();
-        if ($res) header('Location:mycart.php?success');
-        else header('Location:index.php?error');
+       $res = buyAllProducts();
+        if (!$res)  header('Location:index.php?error');
+        else {
+            $_SESSION['success'] = ['Товары успешно куплены'];
+        }
+
     }
 
 }
-if (isset($_GET['error'])) {
-    if ($_GET['error'] === 'balance') {
-        echo "<div class='alert alert-danger'>У вас недостаточно средств для покупки</div>";
+if (isset($_SESSION['errors'])) {
+    foreach ($_SESSION['errors'] as $error) {
+        echo "<div class='alert alert-danger'>$error</div>";
     }
+    unset($_SESSION['errors']);
 }
-if (isset($_GET['success'])) {
-    echo "<div class='alert alert-success'>Покупка успешно совершена</div>";
+if (isset($_SESSION['success'])) {
+    foreach ($_SESSION['success'] as $success) {
+        echo "<div class='alert alert-success'>$success</div>";
+    }
+    unset($_SESSION['success']);
 }
 ?>
 <div class="container">

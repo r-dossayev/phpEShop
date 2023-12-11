@@ -15,10 +15,22 @@ if (isset($_POST['money'])) {
     $money = $_POST['money'];
     $res = updateBalance($money);
     if ($res) {
-        header('location:profile.php?success');
+       $_SESSION['success'] = ['Счет успешно обновлен'];
     } else {
-        header('location:profile.php?error');
+        $_SESSION['errors'] = ['Ошибка обновления счета'];
     }
+}
+if (isset($_SESSION['errors'])) {
+    foreach ($_SESSION['errors'] as $error) {
+        echo "<div class='alert alert-danger'>$error</div>";
+    }
+    unset($_SESSION['errors']);
+}
+if (isset($_SESSION['success'])) {
+    foreach ($_SESSION['success'] as $success) {
+        echo "<div class='alert alert-success'>$success</div>";
+    }
+    unset($_SESSION['success']);
 }
 ?>
 <div class="container">
@@ -57,7 +69,7 @@ if (isset($_POST['money'])) {
                             <td><?php echo $item->id ?></td>
                             <td><a href="show.php?item=<?= $item->getProduct()->id ?>"><?php echo $item->getProduct()->name ?></a></td>
                             <td><?php echo $item->count ?></td>
-                            <td><?php echo $item->getProduct()->selling_price?> тг</td>
+                            <td><?php echo $item->getTotal() ?> тг</td>
                             <td>куплено</td>
                         </tr>
                         <?php } ?>
@@ -65,12 +77,12 @@ if (isset($_POST['money'])) {
             </table>
         </div>
         <!-- Button trigger modal -->
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal2">
             Обнавить счет
         </button>
 
         <!-- Modal -->
-        <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        <div class="modal fade" id="exampleModal2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel2"
              aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">

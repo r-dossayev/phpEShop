@@ -214,6 +214,21 @@ if (!function_exists('buyAllProducts')) {
     function buyAllProducts()
     {
         global $connection;
+        $carts = $connection->prepare("SELECT * FROM cart WHERE user_id = " . getAuthUser()->id);
+        $products = $connection->prepare("SELECT * FROM products");
+        $carts->execute();
+        $products->execute();
+        $carts = $carts->fetchAll();
+        $products = $products->fetchAll();
+        foreach ($carts as $cart) {
+            foreach ($products as $product) {
+                if ($cart['product_id'] == $product['id']) {
+                    $count = $product['count'] - $cart['count'];
+                    $query = $connection->prepare("UPDATE products SET count = $count WHERE id = " . $product['id']);
+                    $query->execute();
+                }
+            }
+        }
         $query = $connection->prepare("UPDATE cart SET status = 'BOUGHT' WHERE user_id = " . getAuthUser()->id);
         $query->execute();
         return true;
